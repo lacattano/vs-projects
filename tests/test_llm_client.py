@@ -7,6 +7,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import os
+
 from src.llm_client import LLMClient
 
 
@@ -106,8 +108,8 @@ class TestGenerateTestMethod:
         client.generate_test("test scenario", additional_context={"selector": "#my-button"})
 
         call_args = mock_post.call_args
-        if os.getenv("CI") != "true":
-        assert "#my-button" in call_args[1]["json"]["prompt"]
+        if os.getenv("CI","") != "true":
+            assert "#my-button" in call_args[1]["json"]["prompt"]
 
     @patch("src.llm_client.requests.post")
     def test_connection_error_handling(self, mock_post):
