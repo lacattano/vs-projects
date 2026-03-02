@@ -164,7 +164,7 @@ def test_example(page: Page):
             generator.client.generate_test = MagicMock(return_value="   \n\n   ")
 
             # Should raise exception for whitespace-only
-            with pytest.raises(Exception):
+            with pytest.raises(ValueError):  # or the appropriate exception
                 generator.generate_and_save("test request")
 
     def test_filename_truncates_long_requests(self, monkeypatch):
@@ -212,7 +212,7 @@ def test_example(page: Page):
 
             generator = TestGenerator(output_dir=tmpdir)
 
-            with pytest.raises(Exception):
+            with pytest.raises(ValueError):  # or the appropriate exception
                 generator.generate_and_save("test request")
 
 

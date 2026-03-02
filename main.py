@@ -232,7 +232,7 @@ def start_mock_server(port: int = MOCK_SITE_PORT) -> None:
         print("🌐 Opening browser...")
         webbrowser.open(base_url)
     except Exception:
-        print(f"⚠️  Could not open browser automatically.")
+        print("⚠️  Could not open browser automatically.")
         print(f"   Open: {base_url} in your browser\n")
 
     try:

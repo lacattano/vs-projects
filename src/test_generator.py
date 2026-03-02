@@ -43,8 +43,8 @@ class TestGenerator:
             ) from e
         except OSError as e:
             raise OSError(
-                f"Failed to create/access output directory {self.output_dir}: {e}"
-            )
+             f"Failed to create/access output directory {self.output_dir}: {e}"
+            ) from e
 
     def generate_and_save(self, user_request: str) -> str:
         """
