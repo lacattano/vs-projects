@@ -48,7 +48,7 @@ class TestTestGeneratorInitialization:
     def test_generator_with_existing_output_dir(self, monkeypatch):
         """Verify generator works with existing output directory."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            generator = TestGenerator(output_dir=tmpdir)
+            _ = TestGenerator(output_dir=tmpdir)
             assert os.path.exists(tmpdir)
 
 
@@ -60,7 +60,7 @@ class TestOutputDirectoryHandling:
         with tempfile.TemporaryDirectory() as tmpdir:
             new_dir = os.path.join(tmpdir, "new_dir")
             assert not os.path.exists(new_dir)
-            generator = TestGenerator(output_dir=new_dir)
+            _ = TestGenerator(output_dir=new_dir)
             assert os.path.exists(new_dir)
             assert os.path.isdir(new_dir)
 
@@ -157,14 +157,14 @@ def test_example(page: Page):
             assert "empty" in str(exc_info.value).lower()
 
     def test_whitespace_only_code_strips(self, monkeypatch):
-        """Verify whitespace-only code is stripped."""
+        """Verify whitespace-only code raises exception."""
         with tempfile.TemporaryDirectory() as tmpdir:
             generator = TestGenerator(output_dir=tmpdir)
             generator.client = MagicMock()
             generator.client.generate_test = MagicMock(return_value="   \n\n   ")
 
             # Should raise exception for whitespace-only
-            with pytest.raises(ValueError):  # or the appropriate exception
+            with pytest.raises(Exception, match="empty"):
                 generator.generate_and_save("test request")
 
     def test_filename_truncates_long_requests(self, monkeypatch):
@@ -212,7 +212,7 @@ def test_example(page: Page):
 
             generator = TestGenerator(output_dir=tmpdir)
 
-            with pytest.raises(ValueError):  # or the appropriate exception
+            with pytest.raises(Exception, match="API error"):
                 generator.generate_and_save("test request")
 
 
@@ -238,9 +238,7 @@ class TestFileNameGeneration:
             result = generator.generate_and_save("test request!@#")
 
             filename = os.path.basename(result)
-            allowed_chars = set(
-                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_."
-            )
+            allowed_chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.")
             for char in filename:
                 assert char in allowed_chars or char == " "
 
@@ -260,7 +258,7 @@ class TestOutputDirectoryPermissions:
     def test_directory_exists_after_initialization(self, monkeypatch):
         """Verify directory exists after TestGenerator init."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            generator = TestGenerator(output_dir=tmpdir)
+            _ = TestGenerator(output_dir=tmpdir)
             assert os.path.isdir(tmpdir)
 
     def test_directory_created_with_correct_path(self, monkeypatch):

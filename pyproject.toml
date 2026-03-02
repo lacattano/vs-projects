@@ -23,7 +23,7 @@ dev = [
 ]
 
 [tool.ruff]
-line-length = 88
+line-length = 120
 target-version = "py313"
 
 [tool.ruff.lint]
@@ -36,6 +36,7 @@ select = [
     "C4", # flake8-comprehensions
     "UP", # pyupgrade
 ]
+ignore = ["E501", "B027"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]

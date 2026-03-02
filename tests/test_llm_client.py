@@ -103,9 +103,7 @@ class TestGenerateTestMethod:
         mock_post.return_value = mock_response
 
         client = LLMClient()
-        client.generate_test(
-            "test scenario", additional_context={"selector": "#my-button"}
-        )
+        client.generate_test("test scenario", additional_context={"selector": "#my-button"})
 
         call_args = mock_post.call_args
         assert "#my-button" in call_args[1]["json"]["prompt"]
@@ -190,10 +188,7 @@ class TestSystemPromptContent:
     def test_system_prompt_uses_async_api(self):
         """Verify system prompt specifies async API usage."""
         client = LLMClient()
-        assert (
-            "async" in client.system_prompt.lower()
-            or "async_playwright" in client.system_prompt.lower()
-        )
+        assert "async" in client.system_prompt.lower() or "async_playwright" in client.system_prompt.lower()
 
     def test_system_prompt_excludes_pytest_import(self):
         """Verify system prompt explicitly excludes pytest."""
@@ -217,8 +212,6 @@ class TestErrorHandling:
             pytest.fail("Should have raised an exception")
         except Exception as e:
             assert "Connection" in str(e) or "ollama" in str(e).lower()
-
-
 
 
 if __name__ == "__main__":

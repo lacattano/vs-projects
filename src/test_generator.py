@@ -9,9 +9,7 @@ from src.llm_client import LLMClient
 
 
 class TestGenerator:
-    def __init__(
-        self, model_name: str | None = None, output_dir: str = "generated_tests"
-    ) -> None:
+    def __init__(self, model_name: str | None = None, output_dir: str = "generated_tests") -> None:
         """
         Initialize the generator.
         model_name: Ollama model to use (defaults to OLLAMA_MODEL env var or 'qwen3.5:35b' for generation quality).
@@ -38,13 +36,9 @@ class TestGenerator:
             os.remove(test_file)
 
         except PermissionError as e:
-            raise PermissionError(
-                f"Write permission denied for output directory: {self.output_dir}"
-            ) from e
+            raise PermissionError(f"Write permission denied for output directory: {self.output_dir}") from e
         except OSError as e:
-            raise OSError(
-             f"Failed to create/access output directory {self.output_dir}: {e}"
-            ) from e
+            raise OSError(f"Failed to create/access output directory {self.output_dir}: {e}") from e
 
     def generate_and_save(self, user_request: str) -> str:
         """
@@ -65,9 +59,7 @@ class TestGenerator:
             # Generate a filename based on the request (slugified) or timestamp
             # Using timestamp for uniqueness
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            slugified_request = "".join(
-                c if c.isalnum() or c == "_" else "_" for c in user_request
-            )[:30]
+            slugified_request = "".join(c if c.isalnum() or c == "_" else "_" for c in user_request)[:30]
             safe_filename = f"test_{timestamp}_{slugified_request}.py"
 
             file_path = os.path.join(self.output_dir, safe_filename)
@@ -77,9 +69,7 @@ class TestGenerator:
 
             print(f"✅ Test generated and saved to: {os.path.abspath(file_path)}")
             print(f"📖 Run with: cd {self.output_dir} && python {safe_filename}")
-            print(
-                "📸 Screenshots will be captured to 'screenshots/' subdirectory for test evidence"
-            )
+            print("📸 Screenshots will be captured to 'screenshots/' subdirectory for test evidence")
             print("   - Test entry, step actions, success, and failure conditions")
             return file_path
 

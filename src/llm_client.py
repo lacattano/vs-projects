@@ -39,9 +39,7 @@ class LLMClient:
         """Return the current model name being used."""
         return self._model
 
-    def generate_test(
-        self, user_request: str, additional_context: dict | None = None
-    ) -> str:
+    def generate_test(self, user_request: str, additional_context: dict | None = None) -> str:
         """
         Generate a test script based on a user request description.
         user_request: A string describing the test scenario.
@@ -70,9 +68,7 @@ class LLMClient:
             full_response: str = raw if isinstance(raw, str) else ""
             return self._extract_code(full_response)
         except requests.exceptions.ConnectionError as e:
-            raise ConnectionError(
-                "Could not connect to Ollama. Ensure it is running on port 11434."
-            ) from e
+            raise ConnectionError("Could not connect to Ollama. Ensure it is running on port 11434.") from e
         except requests.exceptions.RequestException as e:
             print(f"Request failed: {e}")
             return ""
@@ -83,6 +79,7 @@ class LLMClient:
         """
         Extract the code block enclosed in triple backticks.
         Returns code content stripped of surrounding whitespace.
+        If no markdown fences are found, returns the original text stripped.
         """
         pattern = r"```(?:python)?\n(.*?)```"
         match = re.search(pattern, text, re.DOTALL)
@@ -90,5 +87,5 @@ class LLMClient:
             # Strip trailing whitespace (including newline) before closing fences
             result: str = match.group(1).rstrip()
             return result
-        # Return empty string if no match found to ensure consistent return type
-        return ""
+        # Return original text stripped if no markdown fences found
+        return text.strip()

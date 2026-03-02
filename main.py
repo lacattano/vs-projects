@@ -1,11 +1,11 @@
 # src/main.py
-import re
-import os
 import datetime
+import os
+import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
+
 from ollama import chat  # Ensure you have ollama installed: pip install ollama
 
 # Use OLLAMA_MODEL env var or default to 'qwen3.5:35b'
@@ -41,7 +41,7 @@ def slugify(text: str, max_length: int = 100) -> str:
     return slug
 
 
-def save_generated_test(feature_name: str, code: str, base_dir: Path) -> Optional[Path]:
+def save_generated_test(feature_name: str, code: str, base_dir: Path) -> Path | None:
     """Save generated test code to a file with proper naming and overwrite handling.
 
     Returns the saved file path, or None if the user cancelled.
@@ -56,9 +56,7 @@ def save_generated_test(feature_name: str, code: str, base_dir: Path) -> Optiona
         print("\n" + "─" * 50)
         print(f"⚠️  {test_filename} already exists!")
         print("─" * 50)
-        choice = input(
-            f"[1] Overwrite | [2] Rename to test_{slug}_{counter}.py | [3] Cancel: "
-        ).strip()
+        choice = input(f"[1] Overwrite | [2] Rename to test_{slug}_{counter}.py | [3] Cancel: ").strip()
 
         if choice == "1":
             break
@@ -78,9 +76,7 @@ def save_generated_test(feature_name: str, code: str, base_dir: Path) -> Optiona
         f.write(f"# Auto-generated test for: {feature_name}\n")
         f.write(f"# Generated on: {datetime.datetime.now()}\n")
         f.write("#\n")
-        f.write(
-            "# The locators in this test may need to be adjusted to match your current application.\n\n"
-        )
+        f.write("# The locators in this test may need to be adjusted to match your current application.\n\n")
         f.write(code)
 
     print(f"\n✅ File saved to: {target_path.absolute()}")
@@ -135,14 +131,14 @@ class SomePage:
     def __init__(self, page: Page):
         self.page = page
         self.button = page.get_by_role("button", name="Submit")
-    
+
     def fill_form(self, name: str):
         self.input.fill(name)
 
 def test_feature_name(page: Page):
     page.goto("https://example.com")
     page.set_default_timeout(30000)
-    
+
     # Test steps here
     expect(self.page.get_by_text("Success")).to_be_visible()
 ```
@@ -152,9 +148,7 @@ Now generate the code for: {feature_name}
 
     try:
         # Using python-ollama's chat function directly
-        response = chat(
-            model=OLLAMA_MODEL, messages=[{"role": "user", "content": prompt}]
-        )
+        response = chat(model=OLLAMA_MODEL, messages=[{"role": "user", "content": prompt}])
         # Extract the content from the response
         code = response["message"]["content"]
 
@@ -214,8 +208,8 @@ def start_mock_server(port: int = MOCK_SITE_PORT) -> None:
     print("═" * 50)
     print(f"📍 URL: {base_url}")
     print(f"📁 Serving from: {MOCK_SITE_DIR.absolute()}")
-    print(f"🌐 Browser will open automatically...")
-    print(f"⏹️  Press Ctrl+C to stop the server")
+    print("🌐 Browser will open automatically...")
+    print("⏹️  Press Ctrl+C to stop the server")
     print("─" * 50 + "\n")
 
     # Start the server in a subprocess
@@ -260,9 +254,7 @@ def main():
 
     if choice == "1":
         # Standard mode - generate and save test
-        user_input = input(
-            "Enter the feature to test (e.g., 'User Login', 'Checkout Process'): "
-        )
+        user_input = input("Enter the feature to test (e.g., 'User Login', 'Checkout Process'): ")
 
         if not user_input.strip():
             print("❌ Input cannot be empty.")
@@ -277,9 +269,7 @@ def main():
         print(generated_code)
         print("=" * 40)
 
-        saved_file = save_generated_test(
-            user_input, generated_code, GENERATED_TESTS_DIR
-        )
+        saved_file = save_generated_test(user_input, generated_code, GENERATED_TESTS_DIR)
 
         if saved_file:
             print("\n📋 Generated Test Options")
@@ -299,7 +289,7 @@ def main():
                     os.system(f"pytest {saved_file}")
                     break
                 elif test_choice == "2":
-                    print(f"\n✅ Test saved successfully!")
+                    print("\n✅ Test saved successfully!")
                     print(f"Run with: pytest {saved_file}")
                     break
                 elif test_choice == "3":
@@ -316,9 +306,7 @@ def main():
 
     elif choice == "2":
         # Generate test with mock site open
-        user_input = input(
-            "Enter the feature to test (e.g., 'User Login', 'Checkout Process'): "
-        )
+        user_input = input("Enter the feature to test (e.g., 'User Login', 'Checkout Process'): ")
 
         if not user_input.strip():
             print("❌ Input cannot be empty.")
@@ -344,9 +332,7 @@ def main():
         print(generated_code)
         print("=" * 40)
 
-        saved_file = save_generated_test(
-            user_input, generated_code, GENERATED_TESTS_DIR
-        )
+        saved_file = save_generated_test(user_input, generated_code, GENERATED_TESTS_DIR)
 
         if saved_file:
             print(f"\n✅ Test saved to: {saved_file}")
