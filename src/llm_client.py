@@ -79,19 +79,18 @@ class LLMClient:
             return ""
         except requests.exceptions.ConnectionError as e:
             raise ConnectionError("Could not connect to Ollama. Ensure it is running on port 11434.") from e
-        except requests.exceptions.RequestException as e:
-            print(f"Request failed: {e}")
+        except requests.exceptions.RequestException:
+            print("Request failed")
             return ""
-        except Exception as e:
-            raise RuntimeError(f"Error generating code: {e}") from e
+        except Exception:
+            raise
 
     def _generate_mock_test(self, user_request: str, additional_context: dict | None = None) -> str:
         """
         Generate a mock test for CI environments.
         Returns a pre-written Playwright test that covers basic insurance site functionality.
         """
-        mock_test_content = """```python
-import asyncio
+        mock_test_content = """import asyncio
 from playwright.async_api import async_playwright, expect
 
 
@@ -135,7 +134,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-```"""
+"""
         return mock_test_content
 
     def _extract_code(self, text: str) -> str:
@@ -150,4 +149,6 @@ if __name__ == "__main__":
             # Strip trailing whitespace (including newline) before closing fences
             return match.group(1).rstrip()
         # Return original text stripped if no markdown fences found
+        if text is None:
+            return ""
         return text.strip()
