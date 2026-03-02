@@ -1,14 +1,28 @@
-# Playwright Test Generator - Issues Found and Fixes
+# AI-Playwright-Test-Generator - Issues Found and Fixes
 
 ## Overview
-Analysis of your Playwright Test Generator project revealed several issues that needed to be addressed. Below is a comprehensive list of the problems identified and the fixes applied.
+This document tracks issues identified in the `AI-Playwright-Test-Generator` repository and the fixes applied. Issues are categorized by type and include the root cause analysis, solution implemented, and impact of each fix.
 
 ---
 
 ## Issues Identified
 
-### 1. **Path Calculation Problem** ⚠️
-**Problem:** The application was calculating paths incorrectly, looking for files in `C:\Users\l_a_c\code\generated_tests` instead of the correct `C:\Users\l_a_c\code\vs projects\generated_tests`.
+### 1. **GitHub Actions CI/CD Pipeline** ⚠️
+**Problem:** The GitHub Actions workflow badge was not properly configured for the renamed project.
+
+**Root Cause:** The repository reference in the CI/CD badge was outdated.
+
+**Fix:** Updated the CI/CD pipeline badge to reflect the renamed project repository:
+```yaml
+[![CI/CD Pipeline](https://github.com/lacattano/AI-Playwright-Test-Generator/actions/workflows/ci.yml/badge.svg)](https://github.com/lacattano/AI-Playwright-Test-Generator/actions)
+```
+
+**Impact:** The CI/CD status badge now correctly displays for the `AI-Playwright-Test-Generator` project.
+
+---
+
+### 2. **Path Calculation Problem** ⚠️
+**Problem:** The application was calculating paths incorrectly, looking for files in the wrong directory.
 
 **Root Cause:** The path calculation used `Path(__file__).parent.parent` which goes up two levels from the script location, assuming it was in a `src/` subdirectory relative to the project root. However, the path traversal was inconsistent and broke when running from different directories.
 
@@ -18,11 +32,11 @@ GENERATED_TESTS_DIR = Path.cwd() / "generated_tests"
 MOCK_SITE_DIR = Path.cwd() / "generated_tests"
 ```
 
-**Impact:** Users could run the script from any directory and it would correctly find the `generated_tests/` folder relative to where they ran the command.
+**Impact:** Users can run the script from any directory and it will correctly find the `generated_tests/` folder relative to where they ran the command.
 
 ---
 
-### 2. **Pytest Import in Generated Tests** ⚠️
+### 3. **Pytest Import in Generated Tests** ⚠️
 **Problem:** The LLM was generating tests with `import pytest` in the generated code, but the tests were designed to run standalone with Playwright, not with pytest.
 
 **Root Cause:** The original prompt template didn't explicitly tell the LLM to exclude pytest imports. Playwright tests can run either standalone (without pytest) or with pytest - the LLM chose the pytest variant by default.
@@ -37,7 +51,7 @@ MOCK_SITE_DIR = Path.cwd() / "generated_tests"
 
 ---
 
-### 3. **LLM Prompt Structure** ⚠️
+### 4. **LLM Prompt Structure** ⚠️
 **Problem:** The original prompt was too verbose and used XML tags that the LLM might not properly respect.
 
 **Fix:** Restructured the prompt to be more direct and explicit:
@@ -48,7 +62,7 @@ MOCK_SITE_DIR = Path.cwd() / "generated_tests"
 
 ---
 
-### 4. **Markdown Code Fence Parsing** ⚠️
+### 5. **Markdown Code Fence Parsing** ⚠️
 **Problem:** The LLM outputs markdown code fences (```) around the generated code, and the parser wasn't handling them consistently.
 
 **Fix:** Enhanced the cleaning logic to:
@@ -58,7 +72,7 @@ MOCK_SITE_DIR = Path.cwd() / "generated_tests"
 
 ---
 
-### 5. **CLI Output Formatting** ⚠️
+### 6. **CLI Output Formatting** ⚠️
 **Problem:** The CLI output was minimal and didn't provide clear visual hierarchy or status indicators.
 
 **Fix:** Improved formatting with:
@@ -116,11 +130,12 @@ MOCK_SITE_DIR = Path.cwd() / "generated_tests"
 
 ## Summary
 
-The main issues were:
-1. **Path calculation** - Fixed by using `Path.cwd()` instead of path traversal
-2. **Pytest dependency** - Fixed by explicitly telling the LLM not to include it
-3. **Prompt clarity** - Improved with more structured instructions
-4. **Code fence parsing** - Enhanced the extraction logic
-5. **CLI UX** - Improved with better formatting and visual feedback
+The main issues identified and fixed were:
+1. **GitHub Actions CI/CD** - Updated repository references and badge URLs
+2. **Path calculation** - Fixed by using `Path.cwd()` instead of path traversal
+3. **Pytest dependency** - Fixed by explicitly telling the LLM not to include it
+4. **Prompt clarity** - Improved with more structured instructions
+5. **Code fence parsing** - Enhanced the extraction logic
+6. **CLI UX** - Improved with better formatting and visual feedback
 
-These changes should make the tool more robust and easier to use. Good luck with your job search!
+These changes make the `AI-Playwright-Test-Generator` tool more robust and easier to use.

@@ -1,4 +1,4 @@
-# AI Playwright Test Generator
+# AI-Playwright-Test-Generator
 
 An AI-powered tool that generates Playwright Python test scripts using local LLM models via Ollama.
 
@@ -6,7 +6,7 @@ An AI-powered tool that generates Playwright Python test scripts using local LLM
 
 | Metric | Status |
 |--------|--------|
-| CI/CD Pipeline | [![CI/CD Pipeline](https://github.com/lacattano/playwright-test-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/lacattano/playwright-test-generator/actions) |
+| CI/CD Pipeline | [![CI/CD Pipeline](https://github.com/lacattano/AI-Playwright-Test-Generator/actions/workflows/ci.yml/badge.svg)](https://github.com/lacattano/AI-Playwright-Test-Generator/actions) |
 | Python 3.13 | ![Python 3.13](https://img.shields.io/badge/python-3.13+-blue.svg) |
 | License | ![License](https://img.shields.io/badge/license-MIT-green.svg) |
 | Test Coverage | [![Coverage Status](coverage.svg)](coverage.html) |
@@ -68,20 +68,21 @@ This project demonstrates **modern QA automation and AI integration skills**:
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd playwright-test-generator
+   cd AI-Playwright-Test-Generator
    ```
 
-2. **Install dependencies**:
+2. **Configure environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your settings
+   ```
+
+3. **Install dependencies**:
    ```bash
    uv sync
    # or
    pip install -r requirements.txt
    playwright install chromium
-   ```
-
-3. **Ensure Ollama is running** (for local mode):
-   ```bash
-   ollama serve
    ```
 
 ## Configuration
@@ -161,9 +162,9 @@ playwright test generated_tests/ --screenshot=on
 ## Project Structure
 
 ```
-playwright-test-generator/
+AI-Playwright-Test-Generator/
 ├── README.md                    # This file
-├── pyproject.toml               # Project dependencies
+├── pyproject.toml               # Project dependencies and configuration
 ├── main.py                      # Interactive CLI entry point
 ├── src/
 │   ├── __init__.py
