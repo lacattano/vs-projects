@@ -51,7 +51,7 @@ class TestCaseManager:
 
     def discover_test_cases(self) -> list[type[TestCase]]:
         """Discover all test cases in the test_cases directory"""
-        discovered = []
+        discovered: list[type[TestCase]] = []
 
         if not self._discover_dir.exists():
             logger.warning(f"Test cases directory not found: {self._discover_dir}")
