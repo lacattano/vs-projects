@@ -17,7 +17,7 @@ from cli.input_parser import InputParser, ParsedInput
 from cli.story_analyzer import UserStoryAnalyzer, AnalysisResult
 
 
-def cmd_generate(args: argparse.Namespace, parser) -> int:
+def cmd_generate(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
     """Handle generate command."""
     print("=" * 60)
     print("🤖 AI Playwright Test Generator")
@@ -86,7 +86,7 @@ def cmd_test(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_help(args: argparse.Namespace, parser) -> int:
+def cmd_help(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
     """Handle help command."""
     parser.print_help()
     return 0
@@ -135,9 +135,9 @@ def generate_reports(parsed: ParsedInput, analysis_result: AnalysisResult, outpu
     for analyzed_case in analysis_result.analyzed_test_cases:
         report_gen.create_test_case(analyzed_case)
     
-    for format in ReportFormat:
-        report_path = report_gen.save_test_cases(format)
-        print(f"   ✓ {format.value}")
+    for report_format in ReportFormat:
+        report_path = report_gen.save_test_cases(report_format)
+        print(f"   ✓ {report_format.value} → {report_path}")
 
 
 def main():
@@ -165,7 +165,7 @@ Examples:
                           help="Input format")
     gen_parser.add_argument("--output", "-o", type=str, default="generated_tests", dest="output_dir",
                           help="Output directory")
-    gen_parser.add_argument("--mode", type=str, default="fast",
+    gen_parser.add_argument("--mode", type=str, default="auto",
                           choices=["fast", "thorough", "auto"],
                           help="Analysis mode")
     gen_parser.add_argument("--project-key", type=str, default="TEST",
@@ -195,7 +195,7 @@ Examples:
         args.input = ""
     
     # Validate arguments
-    if not args.input and not args.file and not args.generate:
+    if not getattr(args, 'input', None) and not getattr(args, 'file', None) and not getattr(args, 'generate', None):
         print("❌ Error: Must provide input via --input, --file, or --generate")
         return 1
     

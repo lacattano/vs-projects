@@ -79,7 +79,7 @@ class JiraReportGenerator:
         os.makedirs(output_dir, exist_ok=True)
     
     def create_test_case(self, analyzed_case: AnalyzedTestCase, 
-                        screenshot_paths: List[str] = None) -> JiraTestCase:
+                    screenshot_paths: Optional[List[str]] = None) -> JiraTestCase:
         """Create a Jira test case from analyzed test case."""
         screenshot_paths = screenshot_paths or []
         
