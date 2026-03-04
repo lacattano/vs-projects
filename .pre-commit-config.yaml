@@ -1,0 +1,21 @@
+# pre-commit configuration for ruff
+# - ruff: linting and auto-fixes
+# - ruff-format: code formatting
+#
+# To run: pre-commit run
+# To install: pre-commit install
+#
+# Note: generated_tests/ is excluded from checks
+exclude: ^generated_tests/
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy

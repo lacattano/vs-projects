@@ -53,7 +53,7 @@ Follow these rules:
         if os.getenv("CI") == "true":
             # Populate response to avoid NoneType errors in existing tests
             self.response = {"response": "mocked test code", "model": self.model_name}
-            
+
             # Return the full mock script
             return """```python
 from playwright.async_api import async_playwright, Page, expect
@@ -106,4 +106,3 @@ if __name__ == "__main__":
         if match:
             return match.group(1).strip()
         return text.strip()
-    

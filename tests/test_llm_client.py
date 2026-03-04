@@ -3,11 +3,10 @@
 Tests verify prompt formatting, response parsing, and error handling.
 """
 
+import os
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-import os
 
 from src.llm_client import LLMClient
 

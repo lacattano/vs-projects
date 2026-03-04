@@ -264,9 +264,67 @@ These changes make the `AI-Playwright-Test-Generator` tool more robust, maintain
 
 ---
 
+## Pre-commit Configuration (March 4, 2026)
+
+### 12. **Pre-commit Configuration for Ruff** 🆕
+**Problem:** The `.pre-commit-config.yaml` file was missing and needed to be created to enable automated linting and formatting checks before commits.
+
+**Root Cause:** No pre-commit configuration existed in the repository, requiring manual code quality checks.
+
+**Fix:** Created `.pre-commit-config.yaml` with the following configuration:
+```yaml
+# pre-commit configuration for ruff
+# - ruff: linting and auto-fixes
+# - ruff-format: code formatting
+#
+# To run: pre-commit run
+# To install: pre-commit install
+#
+# Note: generated_tests/ is excluded from checks
+exclude: ^generated_tests/
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+```
+
+**CLI Code Quality Fixes Applied:**
+- **cli/evidence_generator.py**: Fixed F841 (unused variable `unused_var`), removed W291 trailing whitespace
+- **cli/input_parser.py**: Fixed F841 (unused variable `title`)
+- **cli/story_analyzer.py**: Fixed C403 (converted list comprehension to generator expression)
+- **cli/test_orchestrator.py**: Fixed B007 (added missing second argument in `sleep()` call), removed W293 trailing whitespace, updated UP032 (f-string for date formatting)
+
+**GitHub Actions Update:**
+- Removed `--fix` flag from the `ruff check` command in `.github/workflows/ci.yml` to prevent CI failures when auto-fixes are available
+
+**Impact:** 
+- Automated code quality checks now run before every commit
+- Auto-fixes are applied automatically for common issues
+- Code formatting is enforced consistently across the project
+- Generated test files are excluded from checks to avoid unnecessary processing
+
+**Usage:**
+```bash
+# Install pre-commit hooks
+pre-commit install
+
+# Run pre-commit on all files
+pre-commit run --all-files
+
+# Run pre-commit on changed files only
+pre-commit run
+```
+
+---
+
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-03-01 | Initial release with interactive CLI |
 | 1.1.0 | 2026-03-03 | Major CLI overhaul with argparse, report generation, and multi-format support |
+| 1.2.0 | 2026-03-04 | Pre-commit configuration with ruff, automated code quality checks, and CLI linting fixes |

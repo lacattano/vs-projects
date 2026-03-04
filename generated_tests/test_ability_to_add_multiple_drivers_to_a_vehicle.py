@@ -5,6 +5,7 @@
 
 from playwright.sync_api import Page, expect
 
+
 class AddMultipleDriversPage:
     def __init__(self, page):
         self.page = page
@@ -13,6 +14,7 @@ class AddMultipleDriversPage:
 
     def fill_form(self, name: str):
         self.input_name.fill(name)
+
 
 def test_ability_to_add_multiple_drivers_to_a_vehicle(page: Page):
     page.goto("https://example.com/add-drivers")

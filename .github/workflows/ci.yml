@@ -48,7 +48,7 @@ jobs:
       - name: Install linting tools
         run: pip install ruff
       - name: Run Ruff linter
-        run: ruff check . --fix # Added --fix to help with that newline error
+        run: ruff check .
       - name: Run Ruff formatter check
         run: ruff format --check .
 

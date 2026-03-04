@@ -4,10 +4,11 @@ An AI-powered tool that generates Playwright Python test scripts using local LLM
 
 | Metric | Status |
 |--------|--------|
-| CI/CD Pipeline | ![CI](https://github.com/lacattano/AI-Playwright-Test-Generator/actions/workflows/ci.yml/badge.svg) |
+| CI/CD Pipeline | [![CI](https://github.com/lacattano/AI-Playwright-Test-Generator/actions/workflows/ci.yml/badge.svg)](https://github.com/lacattano/AI-Playwright-Test-Generator/actions) |
 | Python Version | ![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg) |
 | License | ![License](https://img.shields.io/badge/license-MIT-green.svg) |
 | Code Coverage | [![codecov](https://codecov.io/gh/lacattano/AI-Playwright-Test-Generator/branch/main/graph/badge.svg)](https://codecov.io/gh/lacattano/AI-Playwright-Test-Generator) |
+| Code Quality | [![ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) |
 
 ---
 
@@ -36,6 +37,7 @@ This project demonstrates **modern QA automation and AI integration skills**:
 ✅ **Screenshot Capture** - Automated test evidence collection  
 ✅ **CLI Tool** - Command-line interface with multiple output formats  
 ✅ **Multi-Format Reports** - Jira, HTML, Markdown, JSON, XML exports  
+✅ **Pre-commit Hooks** - Automated linting and formatting with ruff  
 
 ---
 
@@ -282,6 +284,7 @@ AI-Playwright-Test-Generator/
 │   └── test_generator.py
 ├── generated_tests/             # Generated test files and reports
 ├── screenshots/                 # Screenshot evidence
+├── .pre-commit-config.yaml      # Pre-commit hooks configuration
 └── requirements.txt
 ```
 
@@ -316,6 +319,30 @@ AI-Playwright-Test-Generator/
 | `MARKDOWN` | Markdown documentation |
 | `JSON` | Machine-readable JSON |
 | `XML` | XML for CI/CD integration |
+
+---
+
+## Pre-commit Configuration
+
+To install and run pre-commit hooks:
+
+```bash
+# Install pre-commit hooks
+pre-commit install
+
+# Run pre-commit on all files
+pre-commit run --all-files
+
+# Run pre-commit on changed files only
+pre-commit run
+```
+
+**Configuration:**
+
+- **Ruff** - Python linting with auto-fix support
+- **Ruff-Format** - Consistent code formatting
+- **Mypy** - Python type checking
+- **Excluded directories** - `generated_tests/` is excluded from checks
 
 ---
 
@@ -423,6 +450,7 @@ Ensure your JSON file follows the expected format:
 - [x] Batch test generation
 - [x] Cypress/Puppeteer support
 - [x] CI/CD pipeline integration
+- [x] Pre-commit hooks with ruff
 - [ ] Enhanced LLM prompt templates
 - [ ] Test case parameterization
 - [ ] Data-driven test generation

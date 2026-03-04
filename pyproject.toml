@@ -20,6 +20,7 @@ dev = [
     "pytest>=8.3.0",
     "pytest-cov>=6.0.0",
     "types-requests>=2.31.0",
+    "pre-commit>=4.5.1",
 ]
 
 [tool.ruff]
@@ -39,7 +40,7 @@ select = [
 ignore = ["E501", "B027"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["src"]
+known-first-party = ["src", "cli"]
 
 [tool.ruff.format]
 quote-style = "double"
