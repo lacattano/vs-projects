@@ -17,24 +17,40 @@ class LLMClient:
         self.user_prompt: str | None = None
         self.response: dict[str, Any] | None = None
         self.system_prompt: str = """You are an expert Playwright testing engineer.
-Your task is to generate clean, modern, and robust Playwright (Python) test code with screenshot capture for test evidence.
+Your task is to generate clean, modern, and robust Playwright (Python) test code in pytest format.
 Follow these rules:
-1. Import from `playwright.async_api import async_playwright, Page, expect`.
-2. Include comments explaining the steps.
-3. Return ONLY the code block inside triple backticks. Do not add explanations.
-4. Handle waits implicitly where possible, but use explicit waits for dynamic content.
-5. Use meaningful selector strategies (data-testid, CSS, XPath, get_by_role, get_by_label, etc.).
-6. The test should cover the specific scenario requested.
-7. IMPORTANT: Do NOT include `import pytest` - the test will be run directly as a Python script.
-8. IMPORTANT: Use async/await with async_playwright for the test execution.
-9. IMPORTANT: Test against URL http://localhost:8080 for the mock insurance site.
-10. The generated test must be runnable as a standalone script with: python test_filename.py.
-11. CAPTURE SCREENSHOTS for test evidence:
-    - Take screenshot on test entry: screenshots/test_entry_YYYYMMDD_HHMMSS.png
-    - Take screenshot after key interactions (form fills, button clicks): screenshots/step_description_YYYYMMDD_HHMMSS.png
-    - Take screenshot on success condition is met: screenshots/test_passed_YYYYMMDD_HHMMSS.png
-    - Playwright automatically captures screenshot on assertion failure in the console.
-12. Use try/except to capture screenshot on failure. The test must save screenshots to a 'screenshots/' subdirectory."""
+1. Import from `playwright.sync_api import Page, expect` — use the SYNC API, not async.
+2. Use pytest fixtures: the test function must accept `page: Page` as a parameter.
+3. Do NOT use asyncio, async def, or async_playwright — tests must be synchronous pytest functions.
+4. Do NOT include `import pytest` — pytest is available automatically via pytest-playwright.
+5. Do NOT use class-based tests — use standalone test functions only.
+6. Return ONLY the code block inside triple backticks. Do not add explanations.
+7. Include comments explaining each step.
+8. Handle waits implicitly where possible, but use explicit waits for dynamic content.
+9. Use meaningful selector strategies (data-testid, get_by_role, get_by_label, get_by_placeholder, CSS).
+10. The test should cover the specific scenario requested.
+11. Use the Base URL provided in the scenario to navigate — do NOT hardcode any URL.
+12. CAPTURE SCREENSHOTS for test evidence using the sync API:
+    - page.screenshot(path="screenshots/test_entry_YYYYMMDD_HHMMSS.png")
+    - page.screenshot(path="screenshots/step_description_YYYYMMDD_HHMMSS.png")
+    - page.screenshot(path="screenshots/test_passed_YYYYMMDD_HHMMSS.png")
+13. Use try/except/finally to capture a failure screenshot and always close cleanly.
+
+Example structure:
+```python
+from playwright.sync_api import Page, expect
+from datetime import datetime
+import os
+
+def test_example(page: Page) -> None:
+    os.makedirs("screenshots", exist_ok=True)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    page.goto("http://your-base-url")
+    page.screenshot(path=f"screenshots/test_entry_{ts}.png")
+    # test steps here
+    expect(page.get_by_role("button", name="Submit")).to_be_visible()
+    page.screenshot(path=f"screenshots/test_passed_{ts}.png")
+```"""
 
     @property
     def model_name(self) -> str:
@@ -54,23 +70,19 @@ Follow these rules:
             # Populate response to avoid NoneType errors in existing tests
             self.response = {"response": "mocked test code", "model": self.model_name}
 
-            # Return the full mock script
+            # Return a mock pytest-format script
             return """```python
-from playwright.async_api import async_playwright, Page, expect
-import asyncio
+from playwright.sync_api import Page, expect
+from datetime import datetime
+import os
 
-async def run_test():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch()
-        page = await browser.new_page()
-        await page.goto("http://localhost:8080")
-        await page.get_by_role("link", name="Get a Quote").click()
-        await expect(page.get_by_text("Insurance Quotes")).to_be_visible()
-        await browser.close()
-        print("Mock test completed successfully!")
-
-if __name__ == "__main__":
-    asyncio.run(run_test())
+def test_mock_flow(page: Page) -> None:
+    os.makedirs("screenshots", exist_ok=True)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    page.goto("http://localhost:8080")
+    page.screenshot(path=f"screenshots/test_entry_{ts}.png")
+    expect(page.get_by_role("heading")).to_be_visible()
+    page.screenshot(path=f"screenshots/test_passed_{ts}.png")
 ```"""
 
         # 3. NORMAL OLLAMA LOGIC (Running on your ZBook)
