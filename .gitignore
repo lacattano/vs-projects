@@ -59,4 +59,6 @@ htmlcov/
 
 # MyPy
 .myPyCache/
-.mypy_cache/
+.mypy_cache/screenshots/*
+screenshots/*
+!screenshots/.gitkeep

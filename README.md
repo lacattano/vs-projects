@@ -10,6 +10,36 @@ An AI-powered tool that generates Playwright Python test scripts using local LLM
 | Code Coverage | [![codecov](https://codecov.io/gh/lacattano/AI-Playwright-Test-Generator/branch/main/graph/badge.svg)](https://codecov.io/gh/lacattano/AI-Playwright-Test-Generator) |
 | Code Quality | [![ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) |
 
+
+---
+
+## Quick Start — UI Mode (Recommended for Non-Technical Users)
+
+The easiest way to use the tool. No command line knowledge needed after setup.
+
+```bash
+# 1. Install dependencies
+uv sync
+playwright install chromium
+
+# 2. Configure environment
+cp .env.example .env
+# Set OLLAMA_TIMEOUT=300 in .env
+
+# 3. Start Ollama (if not already running)
+ollama serve
+
+# 4. Launch the UI
+bash launch_ui.sh
+# Opens automatically at http://localhost:8501
+```
+
+Then:
+1. Enter your application URL in the sidebar
+2. Paste a user story or acceptance criteria into the text box
+3. Click **Generate Tests**
+4. Download the generated test and evidence reports
+
 ---
 
 ## What This Shows to Employers
@@ -38,6 +68,7 @@ This project demonstrates **modern QA automation and AI integration skills**:
 ✅ **CLI Tool** - Command-line interface with multiple output formats  
 ✅ **Multi-Format Reports** - Jira, HTML, Markdown, JSON, XML exports  
 ✅ **Pre-commit Hooks** - Automated linting and formatting with ruff  
+✅ **Streamlit UI** - Non-technical user interface for manual testers  
 
 ---
 
@@ -98,7 +129,7 @@ This project demonstrates **modern QA automation and AI integration skills**:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `OLLAMA_MODEL` | The Ollama model to use | `qwen3.5:35b` |
-| `OLLAMA_TIMEOUT` | Request timeout in seconds | `60` |
+| `OLLAMA_TIMEOUT` | Request timeout in seconds | `300` |
 
 **Set environment variables:**
 
