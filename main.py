@@ -238,7 +238,7 @@ def start_mock_server(port: int = MOCK_SITE_PORT) -> None:
         server.terminate()
 
 
-def main():
+def main() -> None:
     """Main entry point for the test generator."""
     print("AI Playwright Test Generator")
     print("=" * 40)
