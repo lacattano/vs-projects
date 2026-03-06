@@ -1,82 +1,89 @@
 # BACKLOG.md
 ## AI Playwright Test Generator
 
-Last updated: 2026-03-05
+Last updated: 2026-03-06
 
 ---
 
-## 🔴 Bugs (Fix Before Next Feature)
+## ✅ Closed Bugs
 
 ### B-001 — LLM generates async standalone tests instead of pytest sync
-**Symptom:** Generated tests use `async def`, `asyncio.run()`, `async_playwright` instead of pytest fixtures and sync API  
-**Root cause:** System prompt in `src/llm_client.py` explicitly instructs async standalone format — contradicts the decided pytest standard  
-**Impact:** Generated tests cannot be run with `pytest`, only with `python test_file.py`  
-**Fix:** Update system prompt in `src/llm_client.py` to instruct pytest sync format  
-**Note:** `src/llm_client.py` is a protected file — confirm before editing  
-**Priority:** High — affects every generated test
+**Status:** ✅ Fixed 2026-03-06
+**Fix applied:** Updated system prompt in `src/llm_client.py` to instruct pytest sync format using `playwright.sync_api`. Removed all async/asyncio instructions. Updated CI mock to return pytest sync format.
 
 ---
 
 ### B-002 — LLM output occasionally has all imports on one line (missing newlines)
-**Symptom:** `SyntaxError` on first line of generated file, e.g. `from playwright.sync_api import Pageimport pytestimport os...`  
-**Root cause:** LLM response has newlines stripped somewhere in the `_extract_code()` parsing pipeline  
-**Impact:** Generated file cannot be imported or run at all  
-**Fix:** Add newline normalisation step in `LLMClient._extract_code()` or `TestGenerator`  
-**Priority:** High — makes generated files completely unusable when it occurs
+**Status:** ✅ Fixed 2026-03-06
+**Fix applied:** Added `normalise_code_newlines()` to `src/file_utils.py`. Called in `generate_test_for_story()` in `streamlit_app.py` after LLM response. 8 unit tests added in `tests/test_normalise_code_newlines.py`.
 
 ---
 
 ### B-003 — Generated tests not saved to `generated_tests/` automatically
-**Symptom:** After generating via Streamlit UI, the test only exists in the browser session — not on disk  
-**Root cause:** `streamlit_app.py` calls `client.generate_test()` directly, bypassing `TestGenerator.generate_and_save()`  
-**Impact:** User must manually copy/paste from the UI tab to a file before running  
-**Fix:** Call `generator.generate_and_save()` in the Streamlit pipeline, or add explicit file write after generation  
-**Priority:** High — poor UX, especially for non-technical users
-
----
-
-### B-004 — Ambiguous locators when same label exists on multiple forms
-**Symptom:** `strict mode violation: get_by_label("Driver Name") resolved to 2 elements`  
-**Root cause:** Mock site has both a vehicle form (`#driverName`) and an add driver form (`#driverNameInput`) — both match `get_by_label("Driver Name")`  
-**Impact:** Test fails immediately on fill step  
-**Fix (immediate):** Use `page.locator("#driverNameInput")` instead of `get_by_label` in affected tests  
-**Fix (long term):** Page context scraper will detect and flag ambiguous labels before generation  
-**Priority:** Medium — known workaround exists
+**Status:** ✅ Fixed 2026-03-06
+**Fix applied:** Phase A implementation — `save_generated_test()` called automatically after every successful generation in `streamlit_app.py`. File saved with timestamped slug filename. Rename UI added.
 
 ---
 
 ### B-005 — `launch_ui.sh` starts mock server (not appropriate for general use)
-**Symptom:** Running `bash launch_ui.sh` starts the mock insurance site alongside the UI  
-**Root cause:** Added for dev convenience during session 2  
-**Impact:** Anyone using the tool for their own site gets an unwanted mock server starting  
-**Fix:** Move mock server startup to `launch_dev.sh`, keep `launch_ui.sh` clean  
-**Priority:** Low — no functional impact, just wrong for distribution
+**Status:** ✅ Fixed 2026-03-06
+**Fix applied:** Mock server startup block removed from `launch_ui.sh`. Moved to new `launch_dev.sh` with added `trap` for clean Ctrl+C shutdown of both processes.
+
+---
+
+## 🔴 Open Bugs
+
+### B-004 — Ambiguous locators when same label exists on multiple forms
+**Symptom:** `strict mode violation: get_by_label("Driver Name") resolved to 2 elements`
+**Root cause:** Mock site has both a vehicle form (`#driverName`) and an add driver form (`#driverNameInput`) — both match `get_by_label("Driver Name")`
+**Impact:** Test fails immediately on fill step
+**Fix (immediate):** Use `page.locator("#driverNameInput")` instead of `get_by_label` in affected tests
+**Fix (long term):** Page context scraper (AI-001) will detect and flag ambiguous labels before generation
+**Priority:** Medium — known workaround exists, long-term fix comes with AI-001
 
 ---
 
 ## 🟡 Active Improvements
 
-### AI-001 — Page Context Scraper (Phase 2 priority feature)
-**What:** Before LLM generation, visit the target URL with a headless browser, extract real interactive elements (inputs, buttons, labels, data-testid attributes), inject as structured context into the LLM prompt  
-**Why:** LLM currently invents locators that don't exist on the real page. Scraper provides real selectors, eliminating the need for manual locator fixes after generation  
-**Spec:** See `FEATURE_SPEC_page_context_scraper.md`  
-**New file:** `src/page_context_scraper.py`  
+### AI-001 — Page Context Scraper (Next feature — Phase 2)
+**What:** Before LLM generation, visit the target URL with a headless browser, extract real interactive elements (inputs, buttons, labels, data-testid attributes), inject as structured context into the LLM prompt
+**Why:** LLM currently invents locators that don't exist on the real page. Scraper provides real selectors, eliminating the need for manual locator fixes after generation
+**Spec:** See `FEATURE_SPEC_page_context_scraper.md`
+**New file:** `src/page_context_scraper.py`
 **Priority:** High — single biggest quality improvement possible
 
 ---
 
-### AI-002 — User Story Parser Module (Phase 1)
-**What:** Proper parser supporting Jira AC format, Gherkin, bullets, numbered lists, free-form  
-**Why:** Currently using a simple inline regex fallback in `streamlit_app.py`. A proper module allows testing, reuse, and Smart mode decision logic  
-**New files:** `src/user_story_parser.py`, `src/story_parser_config.py`, `tests/test_user_story_parser.py`  
-**Priority:** High — Phase 1 of roadmap
+### AI-002 — User Story Parser Module
+**What:** Proper parser supporting Jira AC format, Gherkin, bullets, numbered lists, free-form
+**Why:** Criteria extraction currently lives in `streamlit_app.py` as part of Phase B coverage analysis. A dedicated module allows proper unit testing and reuse by the scraper and other components
+**New files:** `src/user_story_parser.py`, `tests/test_user_story_parser.py`
+**Priority:** High — Phase 1 of roadmap, also needed cleanly by AI-001
 
 ---
 
 ### AI-003 — Update `.env.example` for new OLLAMA_TIMEOUT default
-**What:** Update `.env.example` to show `OLLAMA_TIMEOUT=300` instead of `60`  
-**Why:** 60 seconds is not enough for `qwen3.5:35b`. New users following the README will hit timeout failures  
-**Priority:** Medium
+**What:** Update `.env.example` to show `OLLAMA_TIMEOUT=300` instead of `60`
+**Why:** 60 seconds is not enough for `qwen3.5:35b`. New users following the README will hit timeout failures
+**Priority:** Medium — small change, do alongside next feature
+
+---
+
+### AI-004 — Phase C: Run Now gaps
+**What:** Several items from the Phase C spec were not implemented in the first pass
+**Missing:**
+- Environment URL dropdown before Run Now (currently runs against the URL used at generation time)
+- Re-run failed tests only button
+- Screenshot viewer for captured screenshots
+**Priority:** Medium — core Run Now works, these are UX improvements
+
+---
+
+### AI-005 — Coverage helpers should move to `src/coverage_utils.py`
+**What:** `parse_test_functions()`, `extract_criteria_from_user_story()`, `map_tests_to_criteria()`, `calculate_coverage()` and the two dataclasses are currently defined in `streamlit_app.py`
+**Why:** Any unit tests that import them will trigger `st.set_page_config()` and crash — same problem we solved for Phase A with `src/file_utils.py`
+**New file:** `src/coverage_utils.py`, `tests/test_coverage_utils.py`
+**Priority:** Medium — not blocking anything today, but needed before writing coverage unit tests
 
 ---
 
@@ -97,14 +104,8 @@ Last updated: 2026-03-05
 - Streamlit UI dropdown for provider selection
 - Fallback to Ollama when no API keys configured
 
-**Benefits:**
-- Access to more powerful models for complex test generation
-- Users can choose between free local models and paid cloud models
-- Unified interface for testing different LLM capabilities
-
-**Status:** Deferred — Focus on local-first flow first, add cloud providers after core generator works end-to-end
-
-**Priority:** Medium (nice-to-have, Phase 5+)
+**Status:** Deferred — focus on local-first flow first
+**Priority:** Medium (Phase 5+)
 
 ---
 
@@ -141,6 +142,5 @@ src/
     └── auth.py                  # Optional API key validation
 ```
 
-**Status:** Low priority — Phase 4+ consideration once core functionality is complete  
-**Recommendation:** Design with API-first approach to enable future n8n integration  
+**Status:** Low priority — Phase 4+ consideration once core functionality is complete
 **Priority:** Low (defer until Phase 4 or beyond)

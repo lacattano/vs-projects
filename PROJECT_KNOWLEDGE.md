@@ -6,7 +6,7 @@
 
 **Repository:** https://github.com/lacattano/AI-Playwright-Test-Generator
 
-**Current Status:** Active development — Streamlit UI working, LLM pipeline connected, demo-ready
+**Current Status:** Active development — Streamlit UI working, LLM pipeline connected, save/coverage/run workflow complete, demo-ready
 
 ---
 
@@ -71,6 +71,12 @@ streamlit>=1.32.0
 - **Never use:** `pip install` directly — uv manages the venv and pyproject.toml together
 - **Reason:** Project uses uv.lock, pip is not on PATH in this setup
 
+### ✅ Helper Functions Location: `src/` modules (DECIDED 2026-03-06)
+- **Rule:** Helper functions that need unit testing must NOT live in `streamlit_app.py`
+- **Reason:** Importing `streamlit_app` outside a Streamlit context triggers `st.set_page_config()` and crashes
+- **Pattern:** Create `src/module_name.py` → import into `streamlit_app.py` → test via `src.module_name` directly
+- **Existing examples:** `src/file_utils.py` (save, rename, normalise), coverage helpers pending move to `src/coverage_utils.py`
+
 ---
 
 ## Environment Setup
@@ -105,8 +111,11 @@ cp .env.example .env
 # 6. Start Ollama (in separate terminal)
 ollama serve   # if not already running as a service
 
-# 7. Launch UI
+# 7. Launch UI (your own site)
 bash launch_ui.sh
+
+# 7. Launch UI + mock insurance site (development only)
+bash launch_dev.sh
 ```
 
 ### Running Tests
@@ -119,9 +128,6 @@ pytest generated_tests/ -v
 
 # Run with headed browser (see the browser)
 pytest generated_tests/ --headed -v
-
-# Run a standalone generated test
-python generated_tests/test_name.py
 ```
 
 ---
@@ -147,21 +153,27 @@ AI-Playwright-Test-Generator/
 ├── screenshots/                        # Screenshot evidence storage
 ├── src/
 │   ├── __init__.py
+│   ├── file_utils.py                   # Save, rename, normalise helpers
 │   ├── llm_client.py                   # ✅ PROTECTED - Ollama API client
 │   └── test_generator.py              # ✅ PROTECTED - Test generation logic
 ├── tests/                              # Unit tests FOR the tool itself
+│   ├── test_file_utils.py              # Tests for src/file_utils.py
+│   ├── test_llm_client.py              # Tests for src/llm_client.py
+│   ├── test_normalise_code_newlines.py # Tests for B-002 fix
+│   └── test_test_generator.py          # Tests for src/test_generator.py
 ├── .env                                # Local config (NEVER COMMIT)
 ├── .env.example                        # Template for .env
 ├── .streamlit/
 │   └── config.toml                     # Streamlit theme config
-├── launch_ui.sh                        # Start UI + mock server
+├── launch_dev.sh                       # Start UI + mock site (dev only)
+├── launch_ui.sh                        # Start UI only (general use)
 ├── main.py                             # ✅ PROTECTED - CLI entry point
 ├── pytest.ini                          # Pytest configuration
 ├── pyproject.toml                      # Project deps (managed by uv)
 ├── streamlit_app.py                    # Streamlit UI
 ├── uv.lock                             # Dependency lock file
-├── BACKLOG.md                          # Feature backlog (this session)
-├── FEATURE_SPEC_page_context_scraper.md # Phase 2 feature spec
+├── BACKLOG.md                          # Feature backlog
+├── FEATURE_SPEC_page_context_scraper.md # AI-001 feature spec
 └── PROJECT_KNOWLEDGE.md               # This file
 ```
 
@@ -170,11 +182,11 @@ AI-Playwright-Test-Generator/
 ## Protected Files (DO NOT MODIFY Without Explicit Request)
 
 - `src/llm_client.py` - ✅ Working correctly, handles Ollama API
-- `src/test_generator.py` - ✅ Working correctly, generates tests
+- `src/test_generator.py` - ✅ Working correctly, generates and saves tests
 - `main.py` - ✅ Working CLI interface
 - `.github/workflows/ci.yml` - ✅ CI/CD configured and working
 
-**Rule:** Always ask before modifying these files.
+**Rule:** Always ask before modifying these files. If a bug is in one of these files, note it in BACKLOG.md and confirm the fix explicitly before editing.
 
 ---
 
@@ -186,6 +198,7 @@ AI-Playwright-Test-Generator/
 - ❌ **NEVER use native async format for tests** - pytest sync format is decided
 - ❌ **NEVER remove type hints** - Project standard is full type annotation
 - ❌ **NEVER force push to main** without explicit request
+- ❌ **NEVER put testable helper functions in `streamlit_app.py`** - put them in `src/` instead
 
 ---
 
@@ -209,15 +222,26 @@ source .venv/Scripts/activate   # Git Bash / Windows
 - Confirm `.env` is in project root
 - `load_dotenv()` must be called before LLMClient initialises
 
-### Issue: Generated Tests Fail Immediately
-**Symptoms:** `SyntaxError` or `NameError: name 'self' is not defined`
-**Cause:** LLM output missing newlines (all imports on one line), or class/function style mixed
-**Solution:** This is a known generator bug — see BACKLOG.md item B-001
+### Issue: Generated Tests Have SyntaxError on Import Lines
+**Symptoms:** `SyntaxError` on line 1, imports concatenated e.g. `from playwright.sync_api import Pageimport pytest`
+**Cause:** LLM response has newlines stripped in the extraction pipeline (B-002)
+**Solution:** Fixed — `normalise_code_newlines()` now applied automatically after generation
 
 ### Issue: Locator Resolves to Multiple Elements
 **Symptoms:** `strict mode violation: get_by_label("X") resolved to 2 elements`
 **Cause:** Same label exists on multiple forms (e.g. vehicle form + add driver form)
 **Solution:** Use specific ID locator: `page.locator("#specificId")` instead of `get_by_label`
+**Long-term fix:** AI-001 page context scraper will detect ambiguous labels before generation
+
+### Issue: Pre-commit fails with "files were modified by this hook"
+**Symptoms:** ruff or ruff-format modifies files then commit aborts
+**Cause:** Pre-commit auto-fixes the files but can't commit mid-run
+**Solution:** `git add -A` then `git commit` again — the fixes are already applied
+
+### Issue: mypy `no-redef` error on type annotation
+**Symptoms:** `error: Name "x" already defined on line N`
+**Cause:** Variable annotated inside a `try` block then re-annotated outside it
+**Solution:** Declare the variable with the wider type (`str | None = None`) before the `try` block
 
 ### Issue: `bash` command not found
 **Symptoms:** Running `bash launch_ui.sh` fails
@@ -245,7 +269,7 @@ source .venv/Scripts/activate   # Git Bash / Windows
 
 ## Implementation Roadmap
 
-### ✅ Phase 0: Setup & Cleanup (Complete)
+### ✅ Phase 0: Setup & Cleanup (Complete — 2026-03-05)
 - venv issues resolved, uv adopted as package manager
 - pytest.ini configured with playwright settings
 - CI/CD working
@@ -253,24 +277,33 @@ source .venv/Scripts/activate   # Git Bash / Windows
 ### ✅ Phase UI: Streamlit Interface (Complete — 2026-03-05)
 - `streamlit_app.py` built and running
 - Dynamic Ollama model list from `ollama list`
-- URL validation (button disabled until URL entered)
-- Pipeline log with timeout visibility
-- All 3 report format tabs + download buttons
-- Bundle ZIP download
+- URL validation, pipeline log, all 3 report tabs, ZIP download
 - `.env` loading fixed with explicit path
 
-### 🚧 Phase 1: Input Format Flexibility (Next)
-**Goal:** Replace built-in regex fallback with proper parser module
-**Files to Create:**
-- `src/user_story_parser.py`
-- `src/story_parser_config.py`
-- `tests/test_user_story_parser.py`
+### ✅ Phase Save/Review/Run: Workflow (Complete — 2026-03-06)
+- **Phase A:** Auto-save to `generated_tests/` with timestamped slug filename, rename UI
+- **Phase B:** Test function parser, criteria extractor, keyword-based coverage mapping, coverage metrics table with colour-coded status badges
+- **Phase C:** `run_playwright_test()` via pytest subprocess, pass/fail display, collapsible output
+- **Bug fixes:** B-001 (async→sync), B-002 (newline normalisation), B-003 (auto-save), B-005 (launch scripts split)
 
-### 🚧 Phase 2: Page Context Scraper
+### 🚧 Phase 2: Page Context Scraper (Next — AI-001)
 **Goal:** Visit target URL before generation, inject real DOM selectors into LLM prompt
 **Spec:** See `FEATURE_SPEC_page_context_scraper.md`
 **Files to Create:**
 - `src/page_context_scraper.py`
+- `tests/test_page_context_scraper.py`
+
+### 🚧 Phase 1: Input Format Flexibility (AI-002)
+**Goal:** Move criteria extraction out of `streamlit_app.py` into a proper tested module
+**Files to Create:**
+- `src/user_story_parser.py`
+- `tests/test_user_story_parser.py`
+
+### 🚧 Coverage Utils Extract (AI-005)
+**Goal:** Move coverage dataclasses and helpers from `streamlit_app.py` to `src/coverage_utils.py`
+**Files to Create:**
+- `src/coverage_utils.py`
+- `tests/test_coverage_utils.py`
 
 ### 🚧 Phase 3: Evidence Collection
 - `src/screenshot_manager.py`
@@ -280,7 +313,6 @@ source .venv/Scripts/activate   # Git Bash / Windows
 ### 🚧 Phase 4: Test Orchestration
 - `src/test_suite_executor.py`
 - `src/result_aggregator.py`
-- Auto-save generated files to `generated_tests/`
 
 ---
 
@@ -298,9 +330,10 @@ source .venv/Scripts/activate   # Git Bash / Windows
 
 - **2026-03-03:** Initial creation, Phase 1-4 roadmap defined, architecture decisions finalised
 - **2026-03-05:** Session 2 — Streamlit UI built and connected, venv issues resolved, uv adopted, mock site updated with Add Driver form, pytest.ini updated, BACKLOG.md created
+- **2026-03-06:** Session 3 — Save/Review/Run workflow (Phases A/B/C), B-001/002/003/005 closed, launch scripts split, pre-commit issues resolved
 
 ---
 
-*Last Updated: 2026-03-05*
+*Last Updated: 2026-03-06*
 *Project Status: Active Development*
-*Current Phase: UI complete, Phase 1 next*
+*Current Phase: Page Context Scraper (AI-001) next*
