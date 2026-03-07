@@ -304,7 +304,7 @@ def run_playwright_test(file_path: str, output_dir: str = "test_output") -> tupl
     try:
         # Execute playwright test command
         result = subprocess.run(
-            ["playwright", "test", file_path],
+            ["pytest", file_path, "-v", "--tb=short"],
             capture_output=True,
             text=True,
             timeout=300,  # 5 minute timeout
