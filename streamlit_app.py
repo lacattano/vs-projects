@@ -9,6 +9,7 @@ import subprocess
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -211,7 +212,7 @@ def map_tests_to_criteria(
     Returns:
         List of RequirementCoverage objects with test mappings
     """
-    coverage = []
+    coverage: list[RequirementCoverage] = []
 
     for i, criterion_text in enumerate(criteria, 1):
         req_id = f"TC-{i:03}"
@@ -225,25 +226,28 @@ def map_tests_to_criteria(
         )
 
         # Now try to match tests
+        # Try number-based match first (test_01_ → TC-001)
+        criterion_num = f"{i:02}"  # "01", "02" etc
+        number_matched = False
         for test_func in test_functions:
-            test_text = test_func.docstring.lower() + " " + test_func.description.lower()
-            test_words = set(test_text.split())
-
-            # Simple keyword matching
-            overlap = len(criterion_words & test_words)
-            if overlap >= 2 or any(word in test_func.name for word in criterion_words):
+            if f"test_{criterion_num}_" in test_func.name or f"test_{i}_" in test_func.name:
                 linked_tests.append(test_func)
                 current_cov.status = "covered"
-                current_cov.confidence = 0.9
+                current_cov.confidence = 0.95
+                number_matched = True
                 break
 
-        # If no tests linked, keep as pending - no duplicate entries
-        if not linked_tests:
-            current_cov.status = "pending"
-            current_cov.confidence = 0.0
-
-        current_cov.linked_tests = linked_tests
-        coverage.append(current_cov)
+        # Fall back to keyword matching only if no number match found
+        if not number_matched:
+            for test_func in test_functions:
+                test_text = test_func.docstring.lower() + " " + test_func.description.lower()
+                test_words = set(test_text.split())
+                overlap = len(criterion_words & test_words)
+                if overlap >= 2 or any(word in test_func.name for word in criterion_words):
+                    linked_tests.append(test_func)
+                    current_cov.status = "covered"
+                    current_cov.confidence = 0.8
+                    break
 
     # Recalculate confidence scores
     for req_cov in coverage:
@@ -257,31 +261,19 @@ def map_tests_to_criteria(
 
 
 def calculate_coverage(coverage: list[RequirementCoverage]) -> dict[str, float]:
-    """
-    Calculate overall coverage metrics from coverage data.
-
-    Returns:
-        Dictionary with coverage metrics:
-        - overall: percentage of requirements with at least one test
-        - covered: percentage with good confidence (>0.7)
-        - pending: percentage with no linked tests
-        - high_confidence: percentage with confidence >0.9
-    """
     total = len(coverage)
     if total == 0:
-        return {"overall": 0.0, "covered": 0.0, "pending": 0.0, "high_confidence": 0.0, "low_confidence": 0.0}
+        return {"overall": 0.0, "covered": 0.0, "pending": 0.0, "tests_generated": 0.0}
 
     covered = sum(1 for r in coverage if r.status == "covered" and r.confidence > 0.7)
     pending = sum(1 for r in coverage if r.status == "pending")
-    high_conf = sum(1 for r in coverage if r.confidence >= 0.9)
-    low_conf = sum(1 for r in coverage if 0 < r.confidence <= 0.7)
+    tests_generated = sum(len(r.linked_tests) for r in coverage)
 
     return {
         "overall": (covered / total) * 100,
         "covered": (covered / total) * 100,
         "pending": (pending / total) * 100,
-        "high_confidence": (high_conf / total) * 100,
-        "low_confidence": (low_conf / total) * 100,
+        "tests_generated": float(tests_generated),
     }
 
 
@@ -358,8 +350,8 @@ def display_coverage(coverage: list[RequirementCoverage]) -> None:
                 <div class="lbl">Requirements</div>
             </div>
             <div class="metric-card">
-                <div class="val">{metrics["high_confidence"]:.0f}%</div>
-                <div class="lbl">High Confidence</div>
+                <div class="val">{int(metrics["tests_generated"])}</div>
+                <div class="lbl">Tests Generated</div>
             </div>
             <div class="metric-card">
                 <div class="val" style="font-size:0.85rem;padding-top:0.3rem">{metrics["pending"]:.0f}%</div>
@@ -399,6 +391,80 @@ def display_coverage(coverage: list[RequirementCoverage]) -> None:
             with cols[3]:
                 st.progress(req.confidence)
                 st.caption(f"{req.confidence:.0%} confidence")
+
+
+def display_analyzed_coverage(analyzed_cases: list[Any]) -> None:
+    """
+    Display analyzed test cases from story_analyzer in the Streamlit UI.
+
+    Args:
+        analyzed_cases: List of AnalyzedTestCase objects from story_analyzer
+    """
+    from cli.story_analyzer import AnalyzedTestCase
+
+    if not analyzed_cases:
+        st.markdown('<div class="status-box warn">⚠ No analyzed test cases to display</div>', unsafe_allow_html=True)
+        return
+
+    st.markdown("---")
+    st.markdown('<span class="section-label">📊 Jira Analysis Results</span>', unsafe_allow_html=True)
+
+    # Calculate summary metrics
+    total_cases = len(analyzed_cases)
+    high_complexity = sum(1 for tc in analyzed_cases if tc.estimated_complexity == "high")
+    medium_complexity = sum(1 for tc in analyzed_cases if tc.estimated_complexity == "medium")
+    low_complexity = sum(1 for tc in analyzed_cases if tc.estimated_complexity == "low")
+
+    st.markdown(
+        f"""
+        <div class="metric-row">
+            <div class="metric-card">
+                <div class="val">{total_cases}</div>
+                <div class="lbl">Total Test Cases</div>
+            </div>
+            <div class="metric-card">
+                <div class="val">{high_complexity}</div>
+                <div class="lbl">High Complexity</div>
+            </div>
+            <div class="metric-card">
+                <div class="val">{medium_complexity}</div>
+                <div class="lbl">Medium Complexity</div>
+            </div>
+            <div class="metric-card">
+                <div class="val">{low_complexity}</div>
+                <div class="lbl">Low Complexity</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Display detailed test case report
+    with st.expander("📋 Detailed Test Case Analysis", expanded=False):
+        for tc in analyzed_cases:
+            if isinstance(tc, AnalyzedTestCase):
+                st.markdown(f"### {tc.title}")
+                st.markdown(f"**Description:** {tc.description[:200]}{'...' if len(tc.description) > 200 else ''}")
+
+                cols = st.columns(3)
+                with cols[0]:
+                    st.markdown(f"**Complexity:** {tc.estimated_complexity.capitalize()}")
+                with cols[1]:
+                    st.markdown(f"**Actions:** {', '.join(tc.identified_actions)}")
+                with cols[2]:
+                    st.markdown(f"**Confidence:** {tc.analysis_confidence:.0%}")
+
+                if tc.suggested_data:
+                    st.markdown("**Suggested Test Data:**")
+                    for key, value in tc.suggested_data.items():
+                        st.code(f"{key}: {value}", language=None)
+
+                if tc.dependencies:
+                    st.markdown("**Dependencies:**")
+                    for dep in tc.dependencies:
+                        st.markdown(f"- {dep}")
+
+                st.markdown("---")
 
 
 def _generate_json_report(test_code: str, coverage: list[RequirementCoverage] | None = None) -> str:
@@ -520,20 +586,27 @@ def display_run_button(
     success, output = False, ""
 
     if run_button:
-        with st.spinner("Running tests."):
+        with st.spinner("Running tests..."):
             success, output = run_playwright_test(saved_file_path)
+        st.session_state.last_run_success = success
+        st.session_state.last_run_output = output
+        st.session_state.last_run_success = None
+        st.session_state.last_run_output = ""
 
-        # Display results
-        if success:
+    # Render from session_state so it survives download button reruns
+    run_success = st.session_state.get("last_run_success")
+    run_output = st.session_state.get("last_run_output", "")
+
+    if run_success is not None:
+        if run_success:
             st.success("✅ All tests passed!")
         else:
             st.error("❌ Some tests failed")
 
-        # Show output in collapsible section
-        with st.expander("📄 Test Output", expanded=not success):
-            st.code(output, language="plaintext")
+        with st.expander("📄 Test Output", expanded=not run_success):
+            st.code(run_output, language="plaintext")
 
-    return success, output
+    return run_success or False, run_output
 
 
 # ── Session State Management ──────────────────────────────────────────────────
@@ -553,6 +626,8 @@ _session_defaults: dict[str, object] = {
     "last_generated_at": None,  # ISO timestamp of last save
     "page_context": None,  # PageContext from last scrape
     "scrape_duration_ms": 0,  # How long the last scrape took
+    "last_run_success": None,  # bool result of last Run Now
+    "last_run_output": "",  # stdout/stderr from last run
 }
 
 
@@ -916,8 +991,7 @@ def main() -> None:
                 )
 
         # Generate test
-        test_code = generate_test_for_story(user_story, base_url, llm_client, page_context)
-
+        test_code: str = generate_test_for_story(user_story, base_url, llm_client, page_context)
         if test_code:
             st.session_state.generated_test = test_code
             st.session_state.last_story = user_story
@@ -926,7 +1000,7 @@ def main() -> None:
 
             # Phase A: Auto-save to disk
             try:
-                saved_path = save_generated_test(
+                saved_path: str = save_generated_test(
                     test_code=test_code,
                     story_text=user_story,
                     base_url=base_url,
@@ -946,12 +1020,10 @@ def main() -> None:
     elif generate_btn and not user_story:
         st.error("❌ Please enter a user story first")
         _log("Empty user story submitted", "error")
-
     # ── Output section — rendered from session_state, persists across reruns ──
-    test_code = st.session_state.get("generated_test")
-    saved_path = st.session_state.get("saved_test_path")
-    story_for_coverage = st.session_state.get("last_story", "")
-
+    test_code = st.session_state.get("generated_test") or ""
+    saved_path = st.session_state.get("saved_test_path") or ""
+    story_for_coverage: str = st.session_state.get("last_story") or ""
     if test_code:
         # Phase A: Save & Rename UI
         if saved_path:
