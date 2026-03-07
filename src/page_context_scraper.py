@@ -13,7 +13,8 @@ import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
-from playwright.sync_api import Page
+from playwright.sync_api import Page, sync_playwright
+from playwright.sync_api import TimeoutError as PWTimeout
 
 
 @dataclass
@@ -248,9 +249,6 @@ def _run_playwright_scraper_process(url: str, timeout_ms: int) -> tuple[PageCont
     works correctly in a clean subprocess (main thread).
     """
     try:
-        from playwright.sync_api import TimeoutError as PWTimeout
-        from playwright.sync_api import sync_playwright
-
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
             page = browser.new_page()
