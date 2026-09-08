@@ -767,7 +767,7 @@ Items required to sell the tool publicly (marketplace, SaaS, CI/CD integration).
 
 **What's needed:**
 - [ ] Public docs site (MkDocs or Docusaurus) — quickstart, API reference, deployment guides, examples
-- [ ] Landing page with: product screenshots, feature list, pricing tiers, "Get Started" CTA
+- [x] Landing page with: product screenshots, feature list, pricing tiers, "Get Started" CTA (built 2026-09-08 — `landing/index.html`: real Streamlit product screenshot, noir artwork toggle, honest "never leaves your deployment" hero (RAG-true), role-based evidence copy (real heatmap/Gantt), per-deployment pricing tiers citing real comparable anchors + `RESEARCH_COMPETITIVE_LANDSCAPE.md §4.2`, TanCat logo, no-egress trust section linking the published egress audit)
 - [ ] Demo video (2-3 minutes) — record a real session: story → generate → HTML evidence
 - [ ] Interactive sandbox — try the tool in-browser without installing (limited to 3 test generations)
 - [ ] AWS Marketplace listing — Docker image / AMI, usage-based billing integration
